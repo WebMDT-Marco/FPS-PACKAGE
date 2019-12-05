@@ -4,7 +4,12 @@ namespace SchoolAPI;
 class SchoolLookup {
     
     function __construct(){
-        $this->API_ENDPOINT = 'https://api.fairfieldschools.org/schools/';
+        if(isset(SCHOOL_API)){
+            $this->API_ENDPOINT = SCHOOL_API;
+        }else{
+            $this->API_ENDPOINT = NULL; 
+        }
+
     }
     
     /* 
