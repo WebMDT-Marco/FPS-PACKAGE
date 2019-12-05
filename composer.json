@@ -1,5 +1,5 @@
 {
-	"name": "fps_package",
+	"name": "fpspackage",
 	"type": "php-app",
 	"license": "MIT",
 	"description": "FPS Package",
