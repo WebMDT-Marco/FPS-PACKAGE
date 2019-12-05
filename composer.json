@@ -1,0 +1,13 @@
+{
+	"name": "fps_package",
+	"type": "php-app",
+	"license": "MIT",
+	"description": "FPS Package",
+	"authors": [
+		{
+		  "name": "Marco Taddei",
+		  "email": "mtaddei2@fairfieldschools.org",
+		  "homepage": "http://fairfieldschools.org/"
+		}
+	]
+}
