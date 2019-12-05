@@ -1,7 +1,7 @@
 <?php
-namespace SchoolAPI;
+namespace FPS;
 
-class SchoolLookup {
+class SchoolAPI {
     
     function __construct(){
         if(isset(SCHOOL_API)){

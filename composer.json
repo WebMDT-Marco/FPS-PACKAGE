@@ -9,5 +9,10 @@
 		  "email": "mtaddei2@fairfieldschools.org",
 		  "homepage": "http://fairfieldschools.org/"
 		}
-	]
+	],
+    "autoload": {
+        "psr-4": {
+            "FPS\\": "src",
+        }
+    },
 }
