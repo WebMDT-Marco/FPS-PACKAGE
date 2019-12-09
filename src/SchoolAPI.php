@@ -3,14 +3,6 @@ namespace FPS;
 
 class SchoolAPI {
     
-    function __construct(){
-        if(isset(SCHOOL_API)){
-            $this->API_ENDPOINT = SCHOOL_API;
-        }else{
-            $this->API_ENDPOINT = NULL; 
-        }
-    }
-    
     /* 
     $parameters = [
         'type'      => 'single',
@@ -72,7 +64,7 @@ class SchoolAPI {
             $decoded = json_decode($response); 
             if($decoded->message == 'pass'){
                 foreach($decoded->body as $school){
-                    if($parameters['type']=='full'){
+                    if($parameters['attribute']=='full'){
                         $output[] = [
                             'id'        => $school->id,
                             'school_id' => $school->school_id,
@@ -83,7 +75,7 @@ class SchoolAPI {
                             'branding'  => $this->processBranding($school->branding),
                             'meta'      => $this->processMeta($school->meta),
                         ];  
-                    }elseif($parameters['type']=='name'){
+                    }elseif($parameters['attribute']=='name'){
                         $output[] = [
                             'id'        => $school->id,
                             'school_id' => $school->school_id,
@@ -93,7 +85,7 @@ class SchoolAPI {
                             'level'     => $school->level,
                             'branding'  => $this->processBranding($school->branding),
                         ];     
-                    }elseif($parameters['type']=='compact'){
+                    }elseif($parameters['attribute']=='compact'){
                         $output[] = [
                             'name'      => $school->name,
                             'slug'      => $school->slug,
@@ -183,16 +175,21 @@ class SchoolAPI {
     function curlAPI($endpoint){
         
         $data = [];
-        if($endpoint){
-            $ch = curl_init($this->API_ENDPOINT . $endpoint);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-            $data = curl_exec($ch);
-            curl_close($ch);   
+        
+        if(SCHOOL_API){
+            if($endpoint){
+                $ch = curl_init(SCHOOL_API . $endpoint);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                $data = curl_exec($ch);
+                curl_close($ch);   
+            }
+        }else{
+            echo 'School API Endpoint must be defined'; 
         }
-
+        
         return $data;
     }
 }

@@ -14,5 +14,8 @@
         "psr-4": {
             "FPS\\": "src"
         }
+    },
+    "config": {
+        "discard-changes": true
     }
 }
