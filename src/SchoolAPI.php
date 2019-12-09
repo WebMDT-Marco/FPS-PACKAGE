@@ -9,12 +9,11 @@ class SchoolAPI {
         }else{
             $this->API_ENDPOINT = NULL; 
         }
-
     }
     
     /* 
     $parameters = [
-        'type'      => single,
+        'type'      => 'single',
         'value'     => 2,
         'sort'      => 'ASC',
         'attribute' => 'full',
@@ -36,7 +35,7 @@ class SchoolAPI {
 
     /*
     $parameters = [
-        'type'      => all,
+        'type'      => 'all',
         'value'     => NULL,
         'sort'      => 'ASC',
         'attribute' => 'full',
@@ -73,23 +72,40 @@ class SchoolAPI {
             $decoded = json_decode($response); 
             if($decoded->message == 'pass'){
                 foreach($decoded->body as $school){
-                    $output[] = [
-                        'id'        => $school->id,
-                        'school_id' => $school->school_id,
-                        'name'      => $school->name,
-                        'slug'      => $school->slug,
-                        'type'      => $school->type,
-                        'level'     => $school->level,
-                        'branding'  => $this->processBranding($school->branding),
-                        'meta'      => $this->processMeta($school->meta),
-                    ];
+                    if($parameters['type']=='full'){
+                        $output[] = [
+                            'id'        => $school->id,
+                            'school_id' => $school->school_id,
+                            'name'      => $school->name,
+                            'slug'      => $school->slug,
+                            'type'      => $school->type,
+                            'level'     => $school->level,
+                            'branding'  => $this->processBranding($school->branding),
+                            'meta'      => $this->processMeta($school->meta),
+                        ];  
+                    }elseif($parameters['type']=='name'){
+                        $output[] = [
+                            'id'        => $school->id,
+                            'school_id' => $school->school_id,
+                            'name'      => $school->name,
+                            'slug'      => $school->slug,
+                            'type'      => $school->type,
+                            'level'     => $school->level,
+                            'branding'  => $this->processBranding($school->branding),
+                        ];     
+                    }elseif($parameters['type']=='compact'){
+                        $output[] = [
+                            'name'      => $school->name,
+                            'slug'      => $school->slug,
+                        ]; 
+                    }  
                 }
             }
         }
-        
+
         return $output;  
     }
-    
+
     function processQuery($parameters){
         
         /*Initialize*/
