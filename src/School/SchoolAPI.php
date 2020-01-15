@@ -61,11 +61,12 @@ class SchoolAPI {
         
         /*Perform CURL Request*/
         $response = $this->curlAPI($query);
-        
+
         if($response){
             
             /*Decode*/
             $decoded = json_decode($response); 
+
             if($decoded->message == 'pass'){
                 foreach($decoded->body as $school){
                     if($parameters['attribute']=='full'){
@@ -78,8 +79,9 @@ class SchoolAPI {
                             'level'     => $school->level,
                             'branding'  => $this->processBranding($school->branding),
                             'meta'      => $this->processMeta($school->meta),
+                            'child'     => $school->child,
                         ];  
-                    }elseif($parameters['attribute']=='name'){
+                    }elseif($parameters['attribute']=='compact'){
                         $output[] = [
                             'id'        => $school->id,
                             'school_id' => $school->school_id,
@@ -88,8 +90,9 @@ class SchoolAPI {
                             'type'      => $school->type,
                             'level'     => $school->level,
                             'branding'  => $this->processBranding($school->branding),
+                            'child'     => $school->child,
                         ];     
-                    }elseif($parameters['attribute']=='compact'){
+                    }elseif($parameters['attribute']=='name'){
                         $output[] = [
                             'name'      => $school->name,
                             'slug'      => $school->slug,
@@ -138,15 +141,28 @@ class SchoolAPI {
 
     function processMeta($values){
         
-        $meta = [];
+        $output = [];
         
         if($values){
             foreach($values as $value){
-                $meta[$value->attribute] = $value->value;
+                $output[$value->attribute] = $value->value;
                 
             }
         }
-        return $meta;
+        return $output;
+    }
+
+    function processChild($values){
+        
+        $output = [];
+        
+        if($values){
+            foreach($values as $value){
+                $output[$value->attribute] = $value->value;
+                
+            }
+        }
+        return $output;
     }
  
     function curlAPI($endpoint){
