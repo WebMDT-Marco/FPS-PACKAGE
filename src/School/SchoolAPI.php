@@ -1,11 +1,11 @@
 <?php
 namespace FPS\School;
 
+use Exception;
+
 class SchoolAPI {
     
-    function __construct(){
-
-    }
+    function __construct(){}
     
     /* 
     $parameters = [
@@ -16,17 +16,8 @@ class SchoolAPI {
     ];
     */  
     function getBySchool($parameters){
-        
-        /*Initialize*/
-        $school = [];
-        
         $request = $this->processRequest($parameters);
-        
-        if($request){
-            $school = $request[0];
-        }
-        
-        return $school;     
+        return $request ? $request[0] : [];
     }
 
     /*
@@ -38,97 +29,40 @@ class SchoolAPI {
     ];
     */ 
     function getSchools($parameters){
-        
-        /*Initialize*/
-        $school = [];
-        
         $request = $this->processRequest($parameters);
-        
-        if($request){
-            $school = $request;
-        }
-        
-        return $school;     
+        return $request ? $request : [];
     }
     
     function processRequest($parameters){
-        
-        /*Initialize*/
-        $output = [];
-        
-        /*Build Query String*/
         $query = $this->processQuery($parameters);
-        
-        /*Perform CURL Request*/
         $response = $this->curlAPI($query);
-
-        if($response){
-            
-            /*Decode*/
-            $decoded = json_decode($response); 
-
-            if($decoded->message == 'pass'){
+        $decoded = json_decode($response);
+    
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Failed to decode JSON from response');
+        }
+    
+        if(isset($decoded->message) && $decoded->message == 'pass'){
+            $output = [];
+            if(isset($decoded->body) && is_array($decoded->body) || is_object($decoded->body)) {
                 foreach($decoded->body as $school){
-                    if($parameters['attribute']=='full'){
-                        $output[] = [
-                            'id'        => $school->id,
-                            'school_id' => $school->school_id,
-                            'name'      => $school->name,
-                            'slug'      => $school->slug,
-                            'type'      => $school->type,
-                            'level'     => $school->level,
-                            'branding'  => $this->processBranding($school->branding),
-                            'meta'      => $this->processMeta($school->meta),
-                            'child'     => $school->child,
-                        ];  
-                    }elseif($parameters['attribute']=='compact'){
-                        $output[] = [
-                            'id'        => $school->id,
-                            'school_id' => $school->school_id,
-                            'name'      => $school->name,
-                            'slug'      => $school->slug,
-                            'type'      => $school->type,
-                            'level'     => $school->level,
-                            'branding'  => $this->processBranding($school->branding),
-                            'child'     => $school->child,
-                        ];     
-                    }elseif($parameters['attribute']=='name'){
-                        $output[] = [
-                            'name'      => $school->name,
-                            'slug'      => $school->slug,
-                        ]; 
-                    }  
+                    $output[] = $this->buildSchoolData($school, $parameters['attribute']);
                 }
             }
+            return $output;
         }
-
-        return $output;  
+        
+        return [];  
     }
 
     function processQuery($parameters){
-        
-        /*Initialize*/
-        $query = '';
-        $isFirst = TRUE;
-        
-        if($parameters){
-            foreach($parameters as $name => $value){
-                if($isFirst){
-                    $query .= '?' . $name . '=' . $value . '&';
-                }else{
-                    $query .= $name . '=' . $value . '&';
-                }
-                $isFirst = FALSE;
-            }
-        }
-        return $query;
+        return '?' . http_build_query($parameters, '', '&');
     }
     
     function processBranding($values){
-
         $branding = [];
-        
-        if($values){
+    
+        if(isset($values) && (is_array($values) || is_object($values))) {
             foreach($values as $value){
                 $branding[$value->type][$value->attribute] = [
                     'value'       => $value->value,
@@ -136,53 +70,69 @@ class SchoolAPI {
                 ];
             }
         }
+        
         return $branding;
     }
 
-    function processMeta($values){
-        
-        $output = [];
-        
-        if($values){
-            foreach($values as $value){
-                $output[$value->attribute] = $value->value;
-                
-            }
-        }
-        return $output;
-    }
 
-    function processChild($values){
-        
+    function processMeta($values){
         $output = [];
-        
-        if($values){
-            foreach($values as $value){
-                $output[$value->attribute] = $value->value;
-                
-            }
+        foreach($values as $value){
+            $output[$value->attribute] = $value->value;
         }
         return $output;
     }
  
     function curlAPI($endpoint){
+        $data = '';
         
-        $data = [];
-        
-        if(SCHOOL_API){
-            if($endpoint){
-                $ch = curl_init(SCHOOL_API . $endpoint);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                $data = curl_exec($ch);
-                curl_close($ch);   
+        if(defined('SCHOOL_API')){
+            $ch = curl_init(SCHOOL_API . $endpoint);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            $data = curl_exec($ch);
+            
+            if (curl_errno($ch)) {
+                throw new Exception('CURL Error: ' . curl_error($ch));
             }
-        }else{
-            echo 'School API Endpoint must be defined'; 
+            
+            curl_close($ch);   
+        } else {
+            throw new Exception('School API Endpoint must be defined'); 
         }
         
+        return $data;
+    }
+
+    private function buildSchoolData($school, $attribute){
+        $data = [
+            'id'        => $school->id,
+            'school_id' => $school->school_id,
+            'name'      => $school->name,
+            'slug'      => $school->slug,
+            'type'      => $school->type,
+            'level'     => $school->level,
+            'branding'  => $this->processBranding($school->branding),
+            'child'     => $school->child,
+        ];
+
+        if($attribute == 'full'){
+            $data['meta'] = $this->processMeta($school->meta);
+        }
+
+        if($attribute == 'compact'){
+            unset($data['meta']);
+        }
+
+        if($attribute == 'name'){
+            return [
+                'name'      => $school->name,
+                'slug'      => $school->slug,
+            ];
+        }
+
         return $data;
     }
 }
